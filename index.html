@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>vini.games</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Lexend:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ============ COLOURS & BASICS ============
+   Vincent's design: black, grey and very dark blue boxes,
+   dark wine red as a slanted line, thin gold for games. */
+:root{
+  --bg:#000000;      /* black background */
+  --grey:#17181c;    /* grey boxes (search, tiles, tour) */
+  --navy:#070c1a;    /* very dark blue (game cards) */
+  --line:#2a2c33;    /* thin borders */
+  --text:#ecebe6;
+  --muted:#8d8f99;   /* grey text */
+  --wine:#6e1423;    /* dark wine red */
+  --wine2:#8f1c30;   /* a bit brighter wine red for hover */
+  --gold:#c9a24a;    /* gold, only for games */
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font:16px/1.6 Lexend,system-ui,sans-serif}
+h1,h2,h3,.logo,.btn,nav button{font-family:Cinzel,Georgia,serif;font-weight:700;letter-spacing:1.5px;margin:0}
+h1{font-size:clamp(28px,4vw,40px);line-height:1.15}
+button,input{font:inherit}
+.page{display:none;padding:32px max(5vw,16px) 64px;max-width:1080px;margin:0 auto}
+.page.show{display:block}
+
+/* ============ THE WINE RED SLANTED LINE ============
+   Any element with class "slash" gets a slanted wine red line under it.
+   It grows on mouse-over and stays when the element is "active". */
+.slash{position:relative}
+.slash::after{content:"";position:absolute;left:10%;right:10%;bottom:2px;height:4px;background:var(--wine2);
+  transform:skewX(-35deg) scaleX(0);transform-origin:left;transition:transform .25s ease}
+.slash:hover::after,.slash.active::after{transform:skewX(-35deg) scaleX(1)}
+
+/* ============ TOP BAR ============ */
+header{display:none;align-items:center;gap:14px;padding:14px max(5vw,16px);background:#000000e6;backdrop-filter:blur(8px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header.show{display:flex}
+.logo{font-size:22px;cursor:pointer;color:#fff}
+.logo span{color:var(--wine2)}
+nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+nav button{background:none;border:none;color:var(--muted);padding:8px 14px 12px;cursor:pointer;font-size:15px}
+nav button:hover,nav button.active{color:#fff}
+
+/* ============ BUTTONS ============ */
+.btn{border:1px solid var(--wine2);border-radius:4px;padding:12px 30px;cursor:pointer;font-size:16px;background:var(--wine);color:#fff;transition:background .15s}
+.btn:hover{background:var(--wine2)}
+.btn.ghost{background:transparent;border-color:#3a3c44}
+.btn.ghost:hover{border-color:var(--wine2);background:transparent}
+
+/* ============ WELCOME PAGE ============ */
+#welcome{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:26px;padding:20px}
+#welcome.show{display:flex}
+#welcome .logo{font-size:clamp(40px,9vw,84px);cursor:default}
+#welcome h2{font-size:clamp(18px,3vw,24px);color:var(--muted);font-weight:600}
+.row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.row .btn{min-width:140px}
+
+/* ============ HOME PAGE ============ */
+.search{display:flex;gap:10px;margin:18px 0 32px}
+.search input{flex:1;min-width:0;padding:14px 18px;border-radius:4px;border:1px solid var(--line);background:var(--grey);color:#fff;font-size:16px}
+.search input:focus{outline:none;border-color:var(--wine2)}
+.homebtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.tile{background:var(--grey);border:1px solid var(--line);border-radius:4px;padding:30px 24px 34px;text-align:left;color:#fff;cursor:pointer;overflow:hidden}
+.tile::after{left:24px;right:auto;width:90px;bottom:16px}
+.tile h2{font-size:26px}
+.tile p{margin:6px 0 0;color:var(--muted)}
+.tile.off{cursor:default;opacity:.5}
+.tile.off::after{display:none}
+
+/* ============ GAME CARDS (gold only here) ============ */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;margin-top:20px}
+.card{background:var(--navy);border:1px solid #c9a24a80;border-radius:4px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-4px);border-color:var(--gold)}
+.pic{position:relative;aspect-ratio:4/3;overflow:hidden;background:#000}
+.pic img,.pic iframe{width:100%;height:100%;object-fit:cover;display:block;border:0;pointer-events:none}
+.card h3{padding:14px 16px 16px;font-size:17px}
+.gamename{text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:1px;text-underline-offset:7px}
+.badge{position:absolute;top:10px;left:10px;background:var(--wine);color:#fff;font:700 12px Cinzel,serif;letter-spacing:1px;padding:3px 8px;border-radius:3px}
+
+/* ============ GAME DETAIL PAGE ============ */
+.detail{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:36px;margin-top:18px;align-items:start}
+.detail .pic{border-radius:4px;border:1px solid var(--gold)}
+.detail .btn{width:100%;margin-top:14px;padding:16px;font-size:20px}
+.detail p{color:#c9c8c2}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:3px;padding:2px 10px;margin:16px 6px 4px 0;font-size:13px;color:var(--muted)}
+@media(max-width:700px){.detail{grid-template-columns:1fr}}
+
+/* ============ TOUR (for new visitors) ============ */
+#tour{position:fixed;inset:0;background:#000c;display:none;align-items:flex-end;justify-content:center;padding:24px;z-index:10}
+#tour.show{display:flex}
+#tourBox{background:var(--grey);border:1px solid var(--wine2);border-radius:4px;padding:22px 24px;max-width:460px;width:100%;box-shadow:0 20px 60px #000}
+#tourBox h2{color:#fff;font-size:22px}
+#tourBox p{color:#c9c8c2}
+.glow{color:#fff!important;position:relative;z-index:11;background:var(--grey)!important}
+.glow::after{transform:skewX(-35deg) scaleX(1)!important}
+.back{background:none;border:none;color:var(--muted);cursor:pointer;padding:0;margin-bottom:10px}
+.back:hover{color:#fff}
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1: WELCOME ============ -->
+<section id="welcome">
+  <div class="logo">VINI<span>.GAMES</span></div>
+  <h2>Are you new here?</h2>
+  <div class="row">
+    <button class="btn" id="yesBtn">Yes</button>
+    <button class="btn ghost" id="noBtn">No</button>
+  </div>
+</section>
+
+<!-- ============ TOP BAR (visible on all other pages) ============ -->
+<header id="top">
+  <div class="logo" id="logo">VINI<span>.GAMES</span></div>
+  <nav>
+    <button class="slash" id="navSearch">Search</button>
+    <button class="slash" id="navGames">Games</button>
+    <button class="slash" id="navShop">Shop</button>
+  </nav>
+</header>
+
+<!-- ============ PAGE 2: HOME ============ -->
+<section class="page" id="home">
+  <h1>Welcome!</h1>
+  <form class="search" id="searchForm">
+    <input id="searchBox" type="search" placeholder="Search for a game…" autocomplete="off">
+    <button class="btn" type="submit">Search</button>
+  </form>
+  <div class="homebtns">
+    <button class="tile slash" id="gamesBtn"><h2>Games</h2><p>Browse all games</p></button>
+    <button class="tile slash off" id="shopBtn"><h2>Shop</h2><p class="soon">Coming soon</p></button>
+  </div>
+</section>
+
+<!-- ============ PAGE 3: ALL GAMES (also shows search results) ============ -->
+<section class="page" id="games">
+  <h1 id="gamesTitle">Games</h1>
+  <div class="cards" id="cardList"></div>
+</section>
+
+<!-- ============ PAGE 4: ONE GAME ============ -->
+<section class="page" id="game">
+  <button class="back" id="backBtn">← All games</button>
+  <div class="detail">
+    <div>
+      <div class="pic" id="gameImg"></div>
+      <a id="playLink"><button class="btn">Play</button></a>
+    </div>
+    <div>
+      <h1><span class="gamename" id="gameName"></span></h1>
+      <div id="gameTags"></div>
+      <p id="gameText"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TOUR BOX ============ -->
+<div id="tour"><div id="tourBox">
+  <h2 id="tourTitle"></h2>
+  <p id="tourText"></p>
+  <button class="btn" id="tourNext">Next</button>
+</div></div>
+
+<script>
+// =====================================================================
+// THE GAME LIST
+// Every game is one entry in this list. To add a new game, copy one
+// block between { } and change the words. That's all!
+// =====================================================================
+const GAMES = [
+  {
+    // "live" shows the real 3D game as the picture (camera circles the island)
+    id: "aquaris",
+    name: "Island of the Aquaris",
+    live: "games/island-of-the-aquaris/index.html#preview",
+    play: "games/island-of-the-aquaris/index.html",
+    tags: ["3D", "Survival", "1-2 players"],
+    text: "You are stranded on an island. Every five minutes a wave of octopus monsters rises from the sea, and every wave is stronger. Chop trees, build spears, eat magic fruit and climb the Mother Tree. In wave 5 the boss Mordor appears. Beat him, and a second island opens: the city of Don Calamari. (The game itself is in German for now.)"
+  }
+];
+
+// =====================================================================
+// SWITCHING PAGES
+// Only one page is visible at a time. show("games") hides all others.
+// =====================================================================
+const $ = id => document.getElementById(id);
+function show(pageId){
+  for (const p of ["welcome","home","games","game"]) $(p).classList.remove("show");
+  $(pageId).classList.add("show");
+  $("top").classList.toggle("show", pageId !== "welcome");
+  // the wine red line stays under the menu item of the page you are on
+  $("navSearch").classList.toggle("active", pageId === "home");
+  $("navGames").classList.toggle("active", pageId === "games" || pageId === "game");
+  window.scrollTo(0,0);
+}
+
+// =====================================================================
+// PICTURE: a normal image, or (if the game has "live") the real game running
+// =====================================================================
+function picture(g){
+  if (g.live) {
+    const f = document.createElement("iframe");
+    f.src = g.live; f.title = g.name; f.loading = "lazy";
+    return f;
+  }
+  const img = document.createElement("img");
+  img.src = g.image; img.alt = "";
+  return img;
+}
+
+// =====================================================================
+// GAME CARDS: draws one card (picture + name) for every game in a list
+// =====================================================================
+function drawCards(list, title){
+  $("gamesTitle").textContent = title;
+  $("cardList").innerHTML = "";
+  if (list.length === 0) {
+    $("cardList").textContent = "No game found. Try another word!";
+  }
+  for (const g of list) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = '<div class="pic"></div><h3></h3>';
+    card.querySelector(".pic").appendChild(picture(g));
+    card.querySelector("h3").innerHTML = '<span class="gamename"></span>';
+    card.querySelector(".gamename").textContent = g.name;
+    if (g.badge) { const b = document.createElement("span"); b.className = "badge"; b.textContent = g.badge; card.querySelector(".pic").appendChild(b); }
+    card.onclick = () => openGame(g);
+    $("cardList").appendChild(card);
+  }
+  show("games");
+}
+
+// =====================================================================
+// ONE GAME: picture left with PLAY underneath, text right
+// =====================================================================
+function openGame(g){
+  $("gameImg").innerHTML = "";
+  $("gameImg").appendChild(picture(g));
+  $("gameName").textContent = g.name;
+  $("gameText").textContent = g.text;
+  $("playLink").href = g.play;
+  $("gameTags").innerHTML = "";
+  for (const t of g.tags) {
+    const s = document.createElement("span");
+    s.className = "tag"; s.textContent = t;
+    $("gameTags").appendChild(s);
+  }
+  show("game");
+}
+
+// =====================================================================
+// SEARCH: keeps only the games whose name contains the search word
+// =====================================================================
+function search(word){
+  word = word.trim().toLowerCase();
+  const found = GAMES.filter(g => g.name.toLowerCase().includes(word));
+  drawCards(found, word ? 'Results for "' + word + '"' : "Games");
+}
+
+// =====================================================================
+// TOUR for new visitors: 3 steps, each one makes a button glow
+// =====================================================================
+const TOUR = [
+  { glow: "navSearch", title: "Search", text: "Know what you want to play? Type the name here." },
+  { glow: "navGames",  title: "Games",  text: "Here you find all games. Click one to see what it's about, then press PLAY." },
+  { glow: "navShop",   title: "Shop",   text: "The shop is coming soon. Stay tuned!" }
+];
+let step = 0;
+function tourStep(){
+  document.querySelectorAll(".glow").forEach(e => e.classList.remove("glow"));
+  if (step >= TOUR.length) { $("tour").classList.remove("show"); return; }
+  const s = TOUR[step];
+  $(s.glow).classList.add("glow");
+  $("tourTitle").textContent = s.title;
+  $("tourText").textContent = s.text;
+  $("tourNext").textContent = step === TOUR.length - 1 ? "Let's go" : "Next";
+  $("tour").classList.add("show");
+}
+
+// =====================================================================
+// BUTTONS: what happens when you click
+// =====================================================================
+$("yesBtn").onclick = () => { show("home"); step = 0; tourStep(); };  // new → tour
+$("noBtn").onclick  = () => show("home");                            // not new → straight in
+$("tourNext").onclick = () => { step++; tourStep(); };
+$("logo").onclick = () => show("home");
+$("navGames").onclick = () => drawCards(GAMES, "Games");
+$("gamesBtn").onclick = () => drawCards(GAMES, "Games");
+$("navSearch").onclick = () => { show("home"); $("searchBox").focus(); };
+$("navShop").onclick = () => alertShop();
+$("shopBtn").onclick = () => alertShop();
+$("backBtn").onclick = () => drawCards(GAMES, "Games");
+$("searchForm").onsubmit = e => { e.preventDefault(); search($("searchBox").value); };
+function alertShop(){ $("shopBtn").querySelector(".soon").textContent = "Coming soon. Promise."; show("home"); }
+
+show("welcome");
+</script>
+</body>
+</html>
