@@ -1763,7 +1763,26 @@ const MP={on:false,host:false,was:false,room:null,nr:null,code:'',name:'',rname:
   mid:0,evOut:[],evSeq:0,hitsOut:[],hitSeq:0,callSeq:0,lastIn:{ev:-1,hit:-1,call:-1},fell:new Set(),treeEp:0,sendT:0,hs:null,prevWa:false,started:false,
   tgL:{pos:P.pos,remote:false},tgR:null,av:null,eproj:[]};
 MP.tgR={pos:MP.rp,remote:true};
-(async()=>{try{if(window.claude&&window.claude.use)MP.room=await window.claude.use('room');}catch(e){MP.room=null;}})();
+// ---- connection for two players
+// On claude.ai the game uses Claude's "room". On vini.games it talks to our own
+// room server (room-server/ in the repository) over a WebSocket.
+const ROOM_SERVER='wss://room.vini.games';
+function wsRoom(base){return{join(name){return new Promise((res,rej)=>{
+  let ws;try{ws=new WebSocket(base+'/'+name);}catch(e){const er=new Error('connect');er.code='kein Server';rej(er);return;}
+  const peers=new Map();let me=null,mine=null,ok=false;
+  const api={
+    presence(d){mine=d;if(ws.readyState===1)ws.send(JSON.stringify({t:'p',d}));return Promise.resolve();},
+    peers(){const l=[...peers].map(([peer,presence])=>({peer,presence,sameTab:false}));if(mine)l.push({peer:me,presence:mine,sameTab:true});return l;},
+    leave(){try{ws.close();}catch(e){}return Promise.resolve();}};
+  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data);}catch(_){return;}
+    if(m.t==='hello'){me=m.me;(m.peers||[]).forEach(p=>peers.set(p.peer,p.presence));ok=true;res(api);}
+    else if(m.t==='p')peers.set(m.peer,m.presence);
+    else if(m.t==='left')peers.delete(m.peer);};
+  ws.onclose=()=>{peers.clear();if(!ok){const er=new Error('closed');er.code='Raum voll oder kein Server';rej(er);}};
+  setTimeout(()=>{if(!ok){try{ws.close();}catch(_){}const er=new Error('timeout');er.code='keine Antwort';rej(er);}},8000);
+});}};}
+(async()=>{try{if(window.claude&&window.claude.use)MP.room=await window.claude.use('room');}catch(e){MP.room=null;}
+  if(!MP.room&&/(^|\.)vini\.games$|vini-games\.pages\.dev$/.test(location.hostname))MP.room=wsRoom(ROOM_SERVER);})();
 // avatar
 function makeAvatar(){
   const g=new THREE.Group();const shirt=M('#3d5f80'),skin=M('#dba27c'),pants=M('#6b5a3a'),hair=M('#4a2e18');
@@ -1872,10 +1891,10 @@ const CODECH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function mpErr(t){$('mpErr').textContent=t||'';}
 $('mpBtn').addEventListener('click',()=>{initAudio();$('start').style.display='none';$('mpScreen').style.display='flex';$('mpStep1').style.display='block';$('mpStep2').style.display='none';mpErr(MP.room?'':'Verbindung wird gesucht…');
   try{$('mpName').value=localStorage.getItem('aq_name')||'';}catch(e){}
-  setTimeout(()=>{if(!MP.room)mpErr('Zu zweit geht leider nur auf claude.ai, wenn ihr beide angemeldet seid und das Spiel geteilt ist.');else mpErr('');},MP.room?0:3000);});
+  setTimeout(()=>{if(!MP.room)mpErr('Zu zweit geht nur auf vini.games oder claude.ai.');else mpErr('');},MP.room?0:3000);});
 $('mpBack').addEventListener('click',()=>{MP.finish();MP.lobbyUpd=null;$('mpScreen').style.display='none';$('start').style.display='flex';});
 async function mpEnter(host,code){
-  if(!MP.room){mpErr('Keine Verbindung möglich. Ist das Spiel auf claude.ai geöffnet?');return;}
+  if(!MP.room){mpErr('Keine Verbindung möglich. Ist das Spiel auf vini.games geöffnet?');return;}
   const name=($('mpName').value||'').replace(/[^\p{L}\p{N} _-]/gu,'').trim().slice(0,12)||(host?'Spieler 1':'Spieler 2');
   try{localStorage.setItem('aq_name',name);}catch(e){}
   mpErr('');MP.name=name;MP.host=host;MP.code=code;
