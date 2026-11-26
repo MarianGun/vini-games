@@ -14,3 +14,4 @@ Vincent's game website.
 3. Copy one block between `{ }` and change name, text, tags and links
 
 Every change saved here appears on vini.games after about a minute.
+now with star ratings
